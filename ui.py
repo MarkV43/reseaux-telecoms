@@ -105,7 +105,7 @@ while True:
         filename = window["--SAVE-NAME--"].get()
         if '.' not in filename:
             filename += '.eps'
-        fig.savefig(f'exports/{filename}.eps')
+        fig.savefig(f'exports/{filename}')
     elif event == "--PEAK-APPLY--":
         if fig_agg is not None:
             fig_agg.get_tk_widget().forget()
@@ -138,9 +138,10 @@ while True:
             outs.append(adaptatif_main.measure_loss(xf, out_step, 0))
             labels.append("Adaptatif")
         if values["--ADAPTIVE-DELAY--"]:
+            delay = int(values["--DELAY--"])
             adaptatif_main.SIMULATION_MINUTES = time
-            outs.append(adaptatif_main.measure_loss(xf, out_step, int(values["--DELAY--"])))
-            labels.append("Adaptatif avec 30s délai")
+            outs.append(adaptatif_main.measure_loss(xf, out_step, delay))
+            labels.append(f"Adaptatif avec {delay}s délai")
 
         minute = (len(outs[0]) * out_step) // 60
 
@@ -193,8 +194,9 @@ while True:
                 labels.append("Adaptatif")
             if values["--ADAPTIVE-DELAY--"]:
                 adaptatif_main.SIMULATION_MINUTES = time
-                outs.append(list(map(partial(adaptatif_main.measure_probability, delay=int(values["--DELAY--"])), xs)))
-                labels.append("Adaptatif avec 30s délai")
+                delay = int(values["--DELAY--"])
+                outs.append(list(map(partial(adaptatif_main.measure_probability, delay=delay), xs)))
+                labels.append(f"Adaptatif avec {delay}s délai")
             
         fig = plt.figure(figsize=(5, 4), dpi=100)
         ax = fig.add_subplot(111)

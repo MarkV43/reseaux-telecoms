@@ -20,7 +20,7 @@ def main():
         adaptatif_delay = list(ex.map(partial(adaptatif_main.measure_probability, delay=30), xs))
 
         end = time.time()
-        print(end - start)
+        # print(end - start)
 
         plt.plot(xs, [100*x for x in static], label="Static")
         plt.plot(xs, [100*x for x in partage], label="Partage de Charge")

@@ -37,12 +37,13 @@ CA1.calculate_paths(stations)
 # exit(0)
 
 
-def simulation(calls_per_minute: int | Callable[[int], int]) -> tuple[float, float, float]:
+def simulation(calls_per_minute: int | Callable[[int], int], out_step: int=1) -> tuple[float, float, float]:
     minutes = 0
     seconds = 0
     new_calls = [0] * 60
 
     lost_calls = 0
+    total_lost_calls = 0
 
     durations = []
 
@@ -93,6 +94,7 @@ def simulation(calls_per_minute: int | Callable[[int], int]) -> tuple[float, flo
             else:
                 if minutes > 5:
                     lost_calls += 1
+                    total_lost_calls += 1
                     total_calls -= 1
 
         for i, (duration, path) in enumerate(durations):
@@ -108,15 +110,18 @@ def simulation(calls_per_minute: int | Callable[[int], int]) -> tuple[float, flo
                 total_calls -= 1
         
         nb_concurrent_calls.append(total_calls)
-        nb_lost_calls.append(lost_calls)
 
         seconds += 1
         if seconds >= 60:
             seconds -= 60
             minutes += 1
+        
+        if (seconds + minutes * 60) % out_step == 0:
+            nb_lost_calls.append(lost_calls)
+            lost_calls = 0
 
     # TODO: change cpm
-    probability = lost_calls / (cpm * SIMULATION_MINUTES)
+    probability = total_lost_calls / (cpm * SIMULATION_MINUTES)
     # print(f"Total number of lost calls in {SIMULATION_MINUTES} minutes: {lost_calls}")
     # print(f"Probability of loss: {probability} %")
 
@@ -128,24 +133,24 @@ def measure_probability(x):
 def measure_count(x):
     return simulation(x)[1]
 
-def measure_loss(x):
-    print(x if type(x) is int else x(0))
-    return simulation(x)[2]
+def measure_loss(x, out_step):
+    # print(x if type(x) is int else x(0))
+    return simulation(x, out_step)[2]
 
 def main():
     import time
     start = time.time()
 
     with multiprocessing.Pool() as ex:
-        xs = list(range(100, 1000, 10)) + \
+        xs = [1] + list(range(10, 1000, 10)) + \
              list(range(1020, 2000, 20))
         
         static = list(ex.map(measure_probability, xs))
 
         end = time.time()
-        print(end - start)
+        # print(end - start)
 
-        plt.plot(xs, static, label="PC Routing")
+        plt.plot([0] + xs, [0] + static, label="PC Routing")
         plt.grid(True)
         plt.legend()
         plt.show()
@@ -171,25 +176,21 @@ def main3(peak):
     cpm = list(map(int, [20] * 7 + [peak] * 2 + [20] * 100))
     out_step = 20
     ys = measure_loss(lambda x: cpm[x], out_step)
-    print(ys)
+    # print(ys)
     xs = range(len(ys))
 
-    fig, ax1 = plt.subplots()
-    ax2 = ax1.twinx()
+    minute = (len(ys) * out_step) // 60 + 1 # max(map(lambda x: x//60, xs))
 
-    minute = (len(ys) * out_step) // 60 + 1
+    # print("minute", minute)
+    # print(len(ys))
 
-    print("minute", minute)
-    print(len(ys))
+    plt.step([i * out_step / 60 for i in range(len(ys))], ys, 'g-', label="Appels perdus par minute")
 
-    ax1.step([i * out_step / 60 for i in range(len(ys))], ys, 'g-', label="Appels perdus par minute")
+    plt.step(list(range(minute)), cpm[:minute], 'b-', label="Appels démarrés par minute")
 
-    ax2.step(list(range(minute)), cpm[:minute], 'b-', label="Appels démarrés par minute")
-
-    ax1.set_xlabel("Minutes")
-    ax1.set_ylabel("Appels perdus par minute", color='g')
-    ax2.set_ylabel("Appels démarrés par minute", color='b')
+    plt.xlabel("Minutes")
     plt.grid(True)
+    plt.legend()
     plt.show()
 
 

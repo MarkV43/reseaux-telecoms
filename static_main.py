@@ -34,10 +34,10 @@ CA3.set_route(CA2, CTS2)
 
 stations = [CA1, CA2, CA3]
 
-print(CA1.route(CA3))
-print(CA1.route(CA3))
-print(CA1.route(CA3))
-print(CA1.route(CA3))
+# print(CA1.route(CA3))
+# print(CA1.route(CA3))
+# print(CA1.route(CA3))
+# print(CA1.route(CA3))
 
 # exit(0)
 
@@ -148,15 +148,17 @@ def main():
     start = time.time()
 
     with multiprocessing.Pool() as ex:
-        xs = list(range(100, 1000, 10)) + \
+        xs = [1] + list(range(10, 1000, 10)) + \
              list(range(1020, 2000, 20))
         
         static = list(ex.map(measure_probability, xs))
 
         end = time.time()
-        print(end - start)
+        # print(end - start)
 
-        plt.plot(xs, static, label="Static Routing")
+        plt.plot(xs, [k * 100 for k in static], label="Static Routing")
+        plt.xlim((0, max(xs)))
+        plt.ylim((0, 100))
         plt.grid(True)
         plt.legend()
         plt.show()
@@ -185,26 +187,21 @@ def main3(peak=300):
     cpm = list(map(int, [20] * 7 + [peak] * 2 + [20] * 100))
     out_step = 20
     ys = measure_loss(lambda x: cpm[x], out_step)
-    print(ys)
+    # print(ys)
     # ys = measure_loss(lambda x: ([50, 50, 100, 50, 50, 1000, 1000, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20])[x])
     xs = range(len(ys))
 
-    fig, ax1 = plt.subplots()
-    ax2 = ax1.twinx()
-
     minute = (len(ys) * out_step) // 60 + 1 # max(map(lambda x: x//60, xs))
 
-    print("minute", minute)
-    print(len(ys))
+    # print("minute", minute)
+    # print(len(ys))
 
-    ax1.step([i * out_step / 60 for i in range(len(ys))], ys, 'g-', label="Appels perdus par minute")
+    plt.step([i * out_step / 60 for i in range(len(ys))], ys, 'g-', label="Appels perdus par minute")
 
-    ax2.step(list(range(minute)), cpm[:minute], 'b-', label="Appels démarrés par minute")
-
-    ax1.set_xlabel("Minutes")
-    ax1.set_ylabel("Appels perdus par minute", color='g')
-    ax2.set_ylabel("Appels démarrés par minute", color='b')
+    plt.step(list(range(minute)), cpm[:minute], 'b-', label="Appels démarrés par minute")
+    plt.xlabel("Minutes")
     plt.grid(True)
+    plt.legend()
     plt.show()
 
 
